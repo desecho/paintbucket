@@ -1,7 +1,7 @@
 import { RGBA, hexToRGBA } from '../utils/Color';
 import { PALETTE_COLORS } from '../utils/constants';
 
-export type ToolType = 'pour' | 'bucket' | 'shake';
+export type ToolType = 'pour' | 'bucket';
 
 export class Toolbar {
   activeTool: ToolType = 'pour';

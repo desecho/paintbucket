@@ -2,14 +2,9 @@ import { World } from '../world/World';
 import { Toolbar } from '../ui/Toolbar';
 import { POUR_RATE, PARTICLE_RADIUS } from '../utils/constants';
 
-const SHAKE_RADIUS = 60;
-const SHAKE_STRENGTH = 800;
-
 export class InputManager {
   private mouseX = 0;
   private mouseY = 0;
-  private pointerDeltaX = 0;
-  private pointerDeltaY = 0;
   private mouseDown = false;
   private dragStartX = 0;
   private dragStartY = 0;
@@ -41,8 +36,6 @@ export class InputManager {
       const pos = this.getCanvasPos(e);
       this.mouseX = pos.x;
       this.mouseY = pos.y;
-      this.pointerDeltaX = 0;
-      this.pointerDeltaY = 0;
       this.mouseDown = true;
       this.dragStartX = pos.x;
       this.dragStartY = pos.y;
@@ -52,8 +45,6 @@ export class InputManager {
 
     this.canvas.addEventListener('mousemove', (e) => {
       const pos = this.getCanvasPos(e);
-      this.pointerDeltaX += pos.x - this.mouseX;
-      this.pointerDeltaY += pos.y - this.mouseY;
       this.mouseX = pos.x;
       this.mouseY = pos.y;
 
@@ -89,8 +80,6 @@ export class InputManager {
       const pos = this.getCanvasPos(e.touches[0]);
       this.mouseX = pos.x;
       this.mouseY = pos.y;
-      this.pointerDeltaX = 0;
-      this.pointerDeltaY = 0;
       this.mouseDown = true;
       this.dragStartX = pos.x;
       this.dragStartY = pos.y;
@@ -101,8 +90,6 @@ export class InputManager {
     this.canvas.addEventListener('touchmove', (e) => {
       e.preventDefault();
       const pos = this.getCanvasPos(e.touches[0]);
-      this.pointerDeltaX += pos.x - this.mouseX;
-      this.pointerDeltaY += pos.y - this.mouseY;
       this.mouseX = pos.x;
       this.mouseY = pos.y;
       if (this.mouseDown && this.toolbar.activeTool === 'bucket') {
@@ -131,21 +118,12 @@ export class InputManager {
 
   update(dt: number): void {
     if (!this.mouseDown) {
-      this.pointerDeltaX = 0;
-      this.pointerDeltaY = 0;
       return;
     }
 
     if (this.toolbar.activeTool === 'pour') {
       this.pour(dt);
     }
-
-    if (this.toolbar.activeTool === 'shake') {
-      this.applyShake(dt);
-    }
-
-    this.pointerDeltaX = 0;
-    this.pointerDeltaY = 0;
   }
 
   private pour(dt: number): void {
@@ -186,41 +164,9 @@ export class InputManager {
     this.lastPourX = endX;
     this.lastPourY = endY;
   }
-
-  private applyShake(dt: number): void {
-    const ps = this.world.particles;
-    const mx = this.mouseX;
-    const my = this.mouseY;
-    const dvx = this.pointerDeltaX;
-    const dvy = this.pointerDeltaY;
-    const speed = Math.sqrt(dvx * dvx + dvy * dvy);
-    if (speed < 0.25) return;
-
-    const radiusSq = SHAKE_RADIUS * SHAKE_RADIUS;
-
-    for (let i = 0; i < ps.count; i++) {
-      const dx = ps.x[i] - mx;
-      const dy = ps.y[i] - my;
-      const dSq = dx * dx + dy * dy;
-
-      if (dSq < radiusSq) {
-        const falloff = 1 - Math.sqrt(dSq) / SHAKE_RADIUS;
-        const strength = SHAKE_STRENGTH * falloff;
-
-        ps.vx[i] += (dvx / speed) * strength * dt;
-        ps.vy[i] += (dvy / speed) * strength * dt;
-
-        ps.sleeping[i] = 0;
-        ps.sleepCounter[i] = 0;
-      }
-    }
-  }
-
   private stopInteraction(): void {
     this.mouseDown = false;
     this.bucketPreview = null;
-    this.pointerDeltaX = 0;
-    this.pointerDeltaY = 0;
     this.pourAccumulator = 0;
     this.lastPourX = this.mouseX;
     this.lastPourY = this.mouseY;

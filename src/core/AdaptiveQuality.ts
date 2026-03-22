@@ -5,6 +5,9 @@ export interface QualitySettings {
   maxSubsteps: number;
   solverIterations: number;
   renderScale: number;
+  renderStride: number;
+  pourRateScale: number;
+  maxActiveParticles: number;
   drawGrid: boolean;
   bucketShadows: boolean;
 }
@@ -20,6 +23,9 @@ const QUALITY_LEVELS: QualityLevel[] = [
     maxSubsteps: MAX_SUBSTEPS,
     solverIterations: SOLVER_ITERATIONS,
     renderScale: 0.9,
+    renderStride: 1,
+    pourRateScale: 1,
+    maxActiveParticles: 2200,
     drawGrid: true,
     bucketShadows: true,
   },
@@ -29,6 +35,9 @@ const QUALITY_LEVELS: QualityLevel[] = [
     maxSubsteps: 6,
     solverIterations: 3,
     renderScale: 0.82,
+    renderStride: 1,
+    pourRateScale: 0.82,
+    maxActiveParticles: 3000,
     drawGrid: true,
     bucketShadows: true,
   },
@@ -38,6 +47,9 @@ const QUALITY_LEVELS: QualityLevel[] = [
     maxSubsteps: 5,
     solverIterations: 3,
     renderScale: 0.72,
+    renderStride: 1,
+    pourRateScale: 0.65,
+    maxActiveParticles: 3600,
     drawGrid: false,
     bucketShadows: true,
   },
@@ -47,6 +59,9 @@ const QUALITY_LEVELS: QualityLevel[] = [
     maxSubsteps: 4,
     solverIterations: 2,
     renderScale: 0.62,
+    renderStride: 2,
+    pourRateScale: 0.48,
+    maxActiveParticles: 4200,
     drawGrid: false,
     bucketShadows: false,
   },
@@ -56,6 +71,9 @@ const QUALITY_LEVELS: QualityLevel[] = [
     maxSubsteps: 3,
     solverIterations: 2,
     renderScale: 0.52,
+    renderStride: 2,
+    pourRateScale: 0.34,
+    maxActiveParticles: 4400,
     drawGrid: false,
     bucketShadows: false,
   },

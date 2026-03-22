@@ -31,7 +31,14 @@ export class Renderer {
     }
 
     // Particles (fluid) — rendered through goo filter for liquid look
-    this.particleRenderer.draw(ctx, world.particles, logicalW, logicalH, quality.renderScale);
+    this.particleRenderer.draw(
+      ctx,
+      world.particles,
+      logicalW,
+      logicalH,
+      quality.renderScale,
+      quality.renderStride,
+    );
 
     // Buckets drawn on top of fluid so outlines stay visible
     this.bucketRenderer.draw(ctx, world.buckets.buckets, quality.bucketShadows);

@@ -84,6 +84,27 @@ export class ParticleSystem {
     this.count--;
   }
 
+  trimTo(maxCount: number): void {
+    if (this.count <= maxCount) return;
+
+    let remainingToTrim = this.count - maxCount;
+
+    // Prefer removing sleeping particles first because they contribute the least
+    // to perceived motion but still cost physics and rendering work.
+    for (let i = this.count - 1; i >= 0 && remainingToTrim > 0; i--) {
+      if (!this.sleeping[i]) continue;
+      this.removeAt(i);
+      remainingToTrim--;
+      if (i > this.count) {
+        i = this.count;
+      }
+    }
+
+    while (this.count > maxCount) {
+      this.removeAt(this.count - 1);
+    }
+  }
+
   clear(): void {
     this.count = 0;
   }

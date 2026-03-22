@@ -28,6 +28,7 @@ function init(): void {
 
   const loop = new GameLoop(
     (dt) => {
+      world.refreshQuality();
       input.update(dt);
       world.update(dt, window.innerWidth, window.innerHeight);
     },

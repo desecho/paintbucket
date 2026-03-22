@@ -84,6 +84,7 @@ export class ParticleRenderer {
     logicalW: number,
     logicalH: number,
     renderScale: number,
+    renderStride: number,
   ): void {
     const n = ps.count;
     if (n === 0) return;
@@ -98,10 +99,12 @@ export class ParticleRenderer {
 
     const blobScale = 3.35;
     this.ensureBlobSprite();
-    for (let i = 0; i < n; i++) {
+    const stride = Math.max(1, renderStride);
+    const radiusBoost = stride === 1 ? 1 : 1 + (stride - 1) * 0.14;
+    for (let i = 0; i < n; i += stride) {
       const x = ps.x[i] * scale;
       const y = ps.y[i] * scale;
-      const blobRadius = ps.radius[i] * scale * blobScale;
+      const blobRadius = ps.radius[i] * scale * blobScale * radiusBoost;
       const sprite = this.getTintedSprite(ps.r[i], ps.g[i], ps.b[i]);
       const diameter = blobRadius * 2;
       oc.drawImage(sprite, x - blobRadius, y - blobRadius, diameter, diameter);

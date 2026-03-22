@@ -150,7 +150,8 @@ export class InputManager {
 
   private pour(dt: number): void {
     const color = this.toolbar.activeColor;
-    this.pourAccumulator += POUR_RATE * dt;
+    const quality = this.world.getQualitySettings();
+    this.pourAccumulator += POUR_RATE * quality.pourRateScale * dt;
 
     const startX = this.lastPourX;
     const startY = this.lastPourY;
@@ -161,8 +162,18 @@ export class InputManager {
     const streamVx = Math.max(-180, Math.min(180, moveX * 8));
     const streamVy = Math.max(-40, Math.min(120, moveY * 8));
 
-    while (this.pourAccumulator >= 1) {
+    const particleBudget = quality.maxActiveParticles - this.world.particles.count;
+    if (particleBudget <= 0) {
+      this.pourAccumulator = Math.min(this.pourAccumulator, 1);
+      this.lastPourX = endX;
+      this.lastPourY = endY;
+      return;
+    }
+
+    let spawned = 0;
+    while (this.pourAccumulator >= 1 && spawned < particleBudget) {
       this.pourAccumulator -= 1;
+      spawned++;
 
       const t = Math.random();
       const px = startX + moveX * t + (Math.random() - 0.5) * PARTICLE_RADIUS * 2.4;

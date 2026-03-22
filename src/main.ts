@@ -34,8 +34,9 @@ function init(): void {
     () => {
       // Reset transform before drawing (resize sets scale)
       ctx.setTransform(window.devicePixelRatio || 1, 0, 0, window.devicePixelRatio || 1, 0, 0);
-      renderer.draw(world, input.bucketPreview);
+      renderer.draw(world, input.bucketPreview, world.getQualitySettings());
     },
+    () => world.getQualitySettings(),
   );
 
   loop.start();

@@ -78,11 +78,17 @@ export class ParticleRenderer {
     return sprite;
   }
 
-  draw(ctx: CanvasRenderingContext2D, ps: ParticleSystem, logicalW: number, logicalH: number): void {
+  draw(
+    ctx: CanvasRenderingContext2D,
+    ps: ParticleSystem,
+    logicalW: number,
+    logicalH: number,
+    renderScale: number,
+  ): void {
     const n = ps.count;
     if (n === 0) return;
 
-    const scale = 0.9;
+    const scale = renderScale;
     const ow = Math.ceil(logicalW * scale);
     const oh = Math.ceil(logicalH * scale);
     this.ensureOffscreen(ow, oh);

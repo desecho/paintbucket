@@ -1,4 +1,6 @@
-import { FIXED_TIMESTEP, MAX_SUBSTEPS } from '../utils/constants';
+import type { QualitySettings } from './AdaptiveQuality';
+
+type StepConfig = Pick<QualitySettings, 'fixedTimestep' | 'maxSubsteps'>;
 
 export class GameLoop {
   private lastTime = 0;
@@ -6,10 +8,12 @@ export class GameLoop {
   private accumulator = 0;
   private onUpdate: (dt: number) => void;
   private onDraw: () => void;
+  private getStepConfig: () => StepConfig;
 
-  constructor(onUpdate: (dt: number) => void, onDraw: () => void) {
+  constructor(onUpdate: (dt: number) => void, onDraw: () => void, getStepConfig: () => StepConfig) {
     this.onUpdate = onUpdate;
     this.onDraw = onDraw;
+    this.getStepConfig = getStepConfig;
   }
 
   start(): void {
@@ -28,21 +32,22 @@ export class GameLoop {
 
     let dt = (timestamp - this.lastTime) / 1000;
     this.lastTime = timestamp;
+    const { fixedTimestep, maxSubsteps } = this.getStepConfig();
 
-    if (dt > FIXED_TIMESTEP * MAX_SUBSTEPS) {
-      dt = FIXED_TIMESTEP * MAX_SUBSTEPS;
+    if (dt > fixedTimestep * maxSubsteps) {
+      dt = fixedTimestep * maxSubsteps;
     }
 
     this.accumulator += dt;
 
     let steps = 0;
-    while (this.accumulator >= FIXED_TIMESTEP && steps < MAX_SUBSTEPS) {
-      this.onUpdate(FIXED_TIMESTEP);
-      this.accumulator -= FIXED_TIMESTEP;
+    while (this.accumulator >= fixedTimestep && steps < maxSubsteps) {
+      this.onUpdate(fixedTimestep);
+      this.accumulator -= fixedTimestep;
       steps++;
     }
 
-    if (steps === MAX_SUBSTEPS && this.accumulator >= FIXED_TIMESTEP) {
+    if (steps === maxSubsteps && this.accumulator >= fixedTimestep) {
       this.accumulator = 0;
     }
 

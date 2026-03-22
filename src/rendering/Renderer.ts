@@ -1,4 +1,5 @@
 import { World } from '../world/World';
+import type { QualitySettings } from '../core/AdaptiveQuality';
 import { ParticleRenderer } from './ParticleRenderer';
 import { BucketRenderer } from './BucketRenderer';
 
@@ -11,7 +12,11 @@ export class Renderer {
     _canvas: HTMLCanvasElement,
   ) {}
 
-  draw(world: World, bucketPreview: { x: number; y: number; w: number; h: number } | null): void {
+  draw(
+    world: World,
+    bucketPreview: { x: number; y: number; w: number; h: number } | null,
+    quality: QualitySettings,
+  ): void {
     const { ctx } = this;
     const logicalW = window.innerWidth;
     const logicalH = window.innerHeight;
@@ -21,13 +26,15 @@ export class Renderer {
     ctx.fillRect(0, 0, logicalW, logicalH);
 
     // Draw a subtle grid for the sandbox feel
-    this.drawGrid(logicalW, logicalH);
+    if (quality.drawGrid) {
+      this.drawGrid(logicalW, logicalH);
+    }
 
     // Particles (fluid) — rendered through goo filter for liquid look
-    this.particleRenderer.draw(ctx, world.particles, logicalW, logicalH);
+    this.particleRenderer.draw(ctx, world.particles, logicalW, logicalH, quality.renderScale);
 
     // Buckets drawn on top of fluid so outlines stay visible
-    this.bucketRenderer.draw(ctx, world.buckets.buckets);
+    this.bucketRenderer.draw(ctx, world.buckets.buckets, quality.bucketShadows);
 
     // Bucket placement preview
     if (bucketPreview) {

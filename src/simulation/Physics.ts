@@ -12,7 +12,6 @@ import {
   VISCOSITY,
   VELOCITY_DAMPING,
   MAX_SPEED,
-  SOLVER_ITERATIONS,
   SLEEP_THRESHOLD,
   SLEEP_FRAMES,
   COLOR_DIFFUSION_RATE,
@@ -25,7 +24,14 @@ export class Physics {
   private prevY = new Float32Array(0);
   private neighborScratch: number[] = [];
 
-  update(ps: ParticleSystem, buckets: Bucket[], dt: number, canvasW: number, canvasH: number): void {
+  update(
+    ps: ParticleSystem,
+    buckets: Bucket[],
+    dt: number,
+    canvasW: number,
+    canvasH: number,
+    solverIterations: number,
+  ): void {
     const n = ps.count;
     if (n === 0) return;
 
@@ -51,7 +57,8 @@ export class Physics {
       ps.y[i] += ps.vy[i] * dt;
     }
 
-    for (let iteration = 0; iteration < SOLVER_ITERATIONS; iteration++) {
+    const iterations = Math.max(1, solverIterations);
+    for (let iteration = 0; iteration < iterations; iteration++) {
       this.buildSpatialHash(ps, n);
       this.relaxParticles(ps, iteration === 0);
 

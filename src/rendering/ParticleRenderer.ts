@@ -5,6 +5,13 @@ export class ParticleRenderer {
   private offCtx: OffscreenCanvasRenderingContext2D | null = null;
   private lastW = 0;
   private lastH = 0;
+  private blobSprite: OffscreenCanvas | null = null;
+  private tintedSprites = new Map<string, OffscreenCanvas>();
+  private tintedSpriteOrder: string[] = [];
+
+  private readonly blobSpriteSize = 96;
+  private readonly colorQuantization = 16;
+  private readonly maxTintedSprites = 192;
 
   private ensureOffscreen(w: number, h: number): void {
     if (this.lastW !== w || this.lastH !== h) {
@@ -13,6 +20,62 @@ export class ParticleRenderer {
       this.lastW = w;
       this.lastH = h;
     }
+  }
+
+  private ensureBlobSprite(): void {
+    if (this.blobSprite) return;
+
+    const size = this.blobSpriteSize;
+    const radius = size * 0.5;
+    const sprite = new OffscreenCanvas(size, size);
+    const ctx = sprite.getContext('2d')!;
+
+    const grad = ctx.createRadialGradient(radius, radius, 0, radius, radius, radius);
+    grad.addColorStop(0, 'rgba(255,255,255,0.68)');
+    grad.addColorStop(0.38, 'rgba(255,255,255,0.52)');
+    grad.addColorStop(0.72, 'rgba(255,255,255,0.18)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(radius, radius, radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    this.blobSprite = sprite;
+  }
+
+  private quantizeColorChannel(value: number): number {
+    const quantized = Math.round(value / this.colorQuantization) * this.colorQuantization;
+    return Math.max(0, Math.min(255, quantized));
+  }
+
+  private getTintedSprite(r: number, g: number, b: number): OffscreenCanvas {
+    this.ensureBlobSprite();
+
+    const qr = this.quantizeColorChannel(r);
+    const qg = this.quantizeColorChannel(g);
+    const qb = this.quantizeColorChannel(b);
+    const key = `${qr},${qg},${qb}`;
+    const cached = this.tintedSprites.get(key);
+    if (cached) return cached;
+
+    const sprite = new OffscreenCanvas(this.blobSpriteSize, this.blobSpriteSize);
+    const ctx = sprite.getContext('2d')!;
+    ctx.drawImage(this.blobSprite!, 0, 0);
+    ctx.globalCompositeOperation = 'source-in';
+    ctx.fillStyle = `rgb(${qr}, ${qg}, ${qb})`;
+    ctx.fillRect(0, 0, this.blobSpriteSize, this.blobSpriteSize);
+    ctx.globalCompositeOperation = 'source-over';
+
+    this.tintedSprites.set(key, sprite);
+    this.tintedSpriteOrder.push(key);
+
+    if (this.tintedSpriteOrder.length > this.maxTintedSprites) {
+      const oldestKey = this.tintedSpriteOrder.shift()!;
+      this.tintedSprites.delete(oldestKey);
+    }
+
+    return sprite;
   }
 
   draw(ctx: CanvasRenderingContext2D, ps: ParticleSystem, logicalW: number, logicalH: number): void {
@@ -28,24 +91,14 @@ export class ParticleRenderer {
     oc.clearRect(0, 0, ow, oh);
 
     const blobScale = 3.35;
+    this.ensureBlobSprite();
     for (let i = 0; i < n; i++) {
       const x = ps.x[i] * scale;
       const y = ps.y[i] * scale;
-      const r = ps.radius[i] * scale * blobScale;
-      const cr = Math.round(ps.r[i]);
-      const cg = Math.round(ps.g[i]);
-      const cb = Math.round(ps.b[i]);
-
-      const grad = oc.createRadialGradient(x, y, 0, x, y, r);
-      grad.addColorStop(0, `rgba(${cr},${cg},${cb},0.68)`);
-      grad.addColorStop(0.38, `rgba(${cr},${cg},${cb},0.52)`);
-      grad.addColorStop(0.72, `rgba(${cr},${cg},${cb},0.18)`);
-      grad.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
-
-      oc.beginPath();
-      oc.arc(x, y, r, 0, Math.PI * 2);
-      oc.fillStyle = grad;
-      oc.fill();
+      const blobRadius = ps.radius[i] * scale * blobScale;
+      const sprite = this.getTintedSprite(ps.r[i], ps.g[i], ps.b[i]);
+      const diameter = blobRadius * 2;
+      oc.drawImage(sprite, x - blobRadius, y - blobRadius, diameter, diameter);
     }
 
     ctx.save();

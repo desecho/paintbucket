@@ -23,6 +23,7 @@ export class Physics {
   private colorMixer = new ColorMixer();
   private prevX = new Float32Array(0);
   private prevY = new Float32Array(0);
+  private neighborScratch: number[] = [];
 
   update(ps: ParticleSystem, buckets: Bucket[], dt: number, canvasW: number, canvasH: number): void {
     const n = ps.count;
@@ -100,7 +101,7 @@ export class Physics {
     const maxDistSq = INTERACTION_RADIUS * INTERACTION_RADIUS;
 
     for (let i = 0; i < count; i++) {
-      const neighbors = this.spatialHash.query(ps.x[i], ps.y[i]);
+      const neighbors = this.spatialHash.queryInto(ps.x[i], ps.y[i], this.neighborScratch);
       for (let ni = 0; ni < neighbors.length; ni++) {
         const j = neighbors[ni];
         if (j <= i) continue;
@@ -143,7 +144,7 @@ export class Physics {
     const maxDistSq = INTERACTION_RADIUS * INTERACTION_RADIUS;
 
     for (let i = 0; i < ps.count; i++) {
-      const neighbors = this.spatialHash.query(ps.x[i], ps.y[i]);
+      const neighbors = this.spatialHash.queryInto(ps.x[i], ps.y[i], this.neighborScratch);
       for (let ni = 0; ni < neighbors.length; ni++) {
         const j = neighbors[ni];
         if (j <= i) continue;
